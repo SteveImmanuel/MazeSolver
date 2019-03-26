@@ -80,7 +80,6 @@ def bfs(grid,startx,starty,endx,endy):
                 visit(curNode,grid.matrix[curNode.x+1][curNode.y],queue)
             if(valid(grid,curNode,curNode.x,curNode.y+1) and not grid.matrix[curNode.x][curNode.y+1] in queue):    
                 visit(curNode,grid.matrix[curNode.x][curNode.y+1],queue)
-    return False
 
 
 def astar(grid,startx,starty,endx,endy):
@@ -96,7 +95,6 @@ def astar(grid,startx,starty,endx,endy):
         # print(" curnode, x="+str(curNode.x)+', y='+str(curNode.y)+', render='+str(curNode.render))
         if(curNode.isSameWith(grid.matrix[endx][endy])):
             curGoalNode=curNode
-            curNode.render=2
             found=True
         else:
             if(valid(grid,curNode,curNode.x-1,curNode.y) and not grid.matrix[curNode.x-1][curNode.y] in prioQueue.queue):
@@ -113,7 +111,8 @@ def astar(grid,startx,starty,endx,endy):
                 visit(curNode,grid.matrix[curNode.x][curNode.y+1],prioQueue)
         if (found):
             prioQueue.removeUnwanted(curGoalNode)
-    return found
+    if (found):
+        curGoalNode.highLight()
 
 
 if __name__ == "__main__":
@@ -128,10 +127,9 @@ if __name__ == "__main__":
     starty=int(input())
     endx=int(input())
     endy=int(input())
-    found=bfs(grid,startx,starty,endx,endy)
+    bfs(grid,startx,starty,endx,endy)
     # print("selesai")
-    if found:
-        grid.print()
+    grid.print()
     
     
     
