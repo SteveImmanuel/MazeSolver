@@ -1,11 +1,10 @@
-def valid(x,y,maxX,maxY):
-    return (x>=0 and x<maxX) and (y>=0 and y<maxY)
+def valid(grid,curNode,nextX,nextY):
+    return (nextX>=0 and nextX<grid.height) and (nextY>=0 and nextY<grid.width) and (not grid.matrix[nextX][nextY] in curNode.predecessor) and (grid.matrix[nextX][nextY]!=1)
 
 def visit(node1,node2,queue):
-    if((node2.render!=1) and (not node2 in node1.predecessor) and (not node2 in queue)):
-        node2.predecessor+=node1.predecessor
-        node2.predecessor.append(node1)
-        queue.append(node2)
+    node2.predecessor+=node1.predecessor
+    node2.predecessor.append(node1)
+    queue.append(node2)
 
 class Grid:
     def __init__(self,width,height):
@@ -54,35 +53,34 @@ class PrioQueue:
             if(self.queue[i].value+self.queue[i].manhattandist<self.queue[min].value+self.queue[min].manhattandist):
                 min=i
         return self.queue.pop(min)
-    
+    def removeUnwanted(self,curGoalNode):
+        deleteIndex=[]
+        for i in range(len(self.queue)-1,-1,-1):
+            if(self.queue[i].value+self.queue[i].manhattandist>=curGoalNode.value+curGoalNode.manhattandist):
+                deleteIndex.append(i)
+        for i in deleteIndex:
+            del self.queue[i]
+
 def bfs(grid,startx,starty,endx,endy):
     queue=[]
     queue.append(grid.matrix[startx][starty])
     found=False
-    pathExist=True
-
-    while(not found and pathExist):
-        print("current queue=")
-        for i in range(len(queue)):
-            queue[i].print()
-        if(len(queue)==0):
-            pathExist=False
+    while(len(queue)>0 and not found):
+        curNode=queue.pop(0)
+        # print("curnode, x="+str(curNode.x)+', y='+str(curNode.y)+', render='+str(curNode.render))
+        if(curNode.isSameWith(grid.matrix[endx][endy])):
+            curNode.highLight()
+            found=True
         else:
-            curNode=queue.pop(0)
-            print("curnode, x="+str(curNode.x)+', y='+str(curNode.y)+', render='+str(curNode.render))
-            if(curNode.isSameWith(grid.matrix[endx][endy])):
-                curNode.highLight()
-                found=True
-            else:
-                if(valid(curNode.x-1,curNode.y,grid.height,grid.width)):
-                    visit(curNode,grid.matrix[curNode.x-1][curNode.y],queue)
-                if(valid(curNode.x,curNode.y-1,grid.height,grid.width)):
-                    visit(curNode,grid.matrix[curNode.x][curNode.y-1],queue)
-                if(valid(curNode.x+1,curNode.y,grid.height,grid.width)):
-                    visit(curNode,grid.matrix[curNode.x+1][curNode.y],queue)
-                if(valid(curNode.x,curNode.y+1,grid.height,grid.width)):    
-                    visit(curNode,grid.matrix[curNode.x][curNode.y+1],queue)
-    return pathExist
+            if(valid(grid,curNode,curNode.x-1,curNode.y) and not grid.matrix[curNode.x-1][curNode.y] in queue):
+                visit(curNode,grid.matrix[curNode.x-1][curNode.y],queue)
+            if(valid(grid,curNode,curNode.x,curNode.y-1) and not grid.matrix[curNode.x][curNode.y-1] in queue):
+                visit(curNode,grid.matrix[curNode.x][curNode.y-1],queue)
+            if(valid(grid,curNode,curNode.x+1,curNode.y) and not grid.matrix[curNode.x+1][curNode.y] in queue):
+                visit(curNode,grid.matrix[curNode.x+1][curNode.y],queue)
+            if(valid(grid,curNode,curNode.x,curNode.y+1) and not grid.matrix[curNode.x][curNode.y+1] in queue):    
+                visit(curNode,grid.matrix[curNode.x][curNode.y+1],queue)
+    return False
 
 
 def astar(grid,startx,starty,endx,endy):
@@ -95,32 +93,27 @@ def astar(grid,startx,starty,endx,endy):
         # for i in range(len(prioQueue.queue)):
         #     prioQueue.queue[i].print()
         curNode=prioQueue.pop()
-        print(" curnode, x="+str(curNode.x)+', y='+str(curNode.y)+', render='+str(curNode.render))
+        # print(" curnode, x="+str(curNode.x)+', y='+str(curNode.y)+', render='+str(curNode.render))
         if(curNode.isSameWith(grid.matrix[endx][endy])):
+            curGoalNode=curNode
             curNode.render=2
             found=True
         else:
-            if(valid(curNode.x-1,curNode.y,grid.height,grid.width)):
+            if(valid(grid,curNode,curNode.x-1,curNode.y) and not grid.matrix[curNode.x-1][curNode.y] in prioQueue.queue):
                 grid.matrix[curNode.x-1][curNode.y].value=curNode.value+1
-                prioQueue.add(grid.matrix[curNode.x-1][curNode.y])
-            if((grid.matrix[curNode.x][curNode.y-1].render!=1) and (not grid.matrix[curNode.x][curNode.y-1] in curNode.predecessor) and (valid(curNode.x,curNode.y-1,grid.height,grid.width))):
-                # print("masuk 2")
-                grid.matrix[curNode.x][curNode.y-1].predecessor=grid.matrix[curNode.x][curNode.y-1].predecessor+curNode.predecessor
-                grid.matrix[curNode.x][curNode.y-1].predecessor.append(curNode)
+                visit(curNode,grid.matrix[curNode.x-1][curNode.y],prioQueue)
+            if(valid(grid,curNode,curNode.x,curNode.y-1) and not grid.matrix[curNode.x][curNode.y-1] in prioQueue.queue):
                 grid.matrix[curNode.x][curNode.y-1].value=curNode.value+1
-                prioQueue.add(grid.matrix[curNode.x][curNode.y-1])
-            if((grid.matrix[curNode.x][curNode.y+1].render!=1) and (not grid.matrix[curNode.x][curNode.y+1] in curNode.predecessor) and (valid(curNode.x,curNode.y+1,grid.height,grid.width))):
-                # print("masuk 3")
-                grid.matrix[curNode.x][curNode.y+1].predecessor=grid.matrix[curNode.x][curNode.y+1].predecessor + curNode.predecessor
-                grid.matrix[curNode.x][curNode.y+1].predecessor.append(curNode)
-                grid.matrix[curNode.x][curNode.y+1].value=curNode.value+1
-                prioQueue.add(grid.matrix[curNode.x][curNode.y+1])
-            if((grid.matrix[curNode.x+1][curNode.y].render!=1) and (not grid.matrix[curNode.x+1][curNode.y] in curNode.predecessor) and (valid(curNode.x+1,curNode.y,grid.height,grid.width))):
-                # print("masuk 4")
-                grid.matrix[curNode.x+1][curNode.y].predecessor=grid.matrix[curNode.x+1][curNode.y].predecessor+curNode.predecessor
-                grid.matrix[curNode.x+1][curNode.y].predecessor.append(curNode)
+                visit(curNode,grid.matrix[curNode.x][curNode.y-1],prioQueue)
+            if(valid(grid,curNode,curNode.x+1,curNode.y) and not grid.matrix[curNode.x+1][curNode.y] in prioQueue.queue):
                 grid.matrix[curNode.x+1][curNode.y].value=curNode.value+1
-                prioQueue.add(grid.matrix[curNode.x+1][curNode.y])
+                visit(curNode,grid.matrix[curNode.x+1][curNode.y],prioQueue)
+            if(valid(grid,curNode,curNode.x,curNode.y+1) and not grid.matrix[curNode.x][curNode.y+1] in prioQueue.queue):    
+                grid.matrix[curNode.x][curNode.y+1].value=curNode.value+1
+                visit(curNode,grid.matrix[curNode.x][curNode.y+1],prioQueue)
+        if (found):
+            prioQueue.removeUnwanted(curGoalNode)
+    return found
 
 
 if __name__ == "__main__":
@@ -135,10 +128,10 @@ if __name__ == "__main__":
     starty=int(input())
     endx=int(input())
     endy=int(input())
-    bfs(grid,startx,starty,endx,endy)
-    print("selesai")
-
-    grid.print()
+    found=bfs(grid,startx,starty,endx,endy)
+    # print("selesai")
+    if found:
+        grid.print()
     
     
     
