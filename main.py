@@ -1,5 +1,9 @@
+import colorama
+from colorama import Back, Style
+colorama.init()
+
 def valid(grid,curNode,nextX,nextY):
-    return (nextX>=0 and nextX<grid.height) and (nextY>=0 and nextY<grid.width) and (not grid.matrix[nextX][nextY] in curNode.predecessor) and (grid.matrix[nextX][nextY]!=1)
+    return (nextX>=0 and nextX<grid.height) and (nextY>=0 and nextY<grid.width) and (not grid.matrix[nextX][nextY] in curNode.predecessor) and (grid.matrix[nextX][nextY].render!=1)
 
 def visit(node1,node2,queue):
     node2.predecessor+=node1.predecessor
@@ -16,7 +20,12 @@ class Grid:
     def print(self):
         for i in range(self.height):
             for j in range(self.width):
-                print(self.matrix[i][j].render,end='')
+                if(self.matrix[i][j].render==0):
+                    print(Back.WHITE+'  '+Style.RESET_ALL,end='')
+                elif(self.matrix[i][j].render==1):
+                    print(Back.BLACK+'  '+Style.RESET_ALL,end='')
+                elif(self.matrix[i][j].render==2):
+                    print(Back.RED+'  '+Style.RESET_ALL,end='')
             print()
     def generateManDist(self,goalNode):
         for i in range(self.height):
@@ -87,7 +96,7 @@ def astar(grid,startx,starty,endx,endy):
     prioQueue=PrioQueue()
     prioQueue.append(grid.matrix[startx][starty])
     found=False
-    while(len(prioQueue)>0):
+    while(len(prioQueue.queue)>0):
         # print("current prioqueue=")
         # for i in range(len(prioQueue.queue)):
         #     prioQueue.queue[i].print()
@@ -127,7 +136,7 @@ if __name__ == "__main__":
     starty=int(input())
     endx=int(input())
     endy=int(input())
-    bfs(grid,startx,starty,endx,endy)
+    astar(grid,startx,starty,endx,endy)
     # print("selesai")
     grid.print()
     
