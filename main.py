@@ -45,6 +45,7 @@ class Grid: #representasi maze
         for i in range(self.height):
             for j in range(self.width):
                 self.matrix[i][j].visited=False
+                self.matrix[i][j].predecessor=[]
                 if(self.matrix[i][j].render in [2,3,4]):
                     self.matrix[i][j].render=0
 
@@ -74,7 +75,7 @@ class PrioQueue: #representasi priority queue
             idx=0
             found=False
             while(idx<len(self.queue) and not found):
-                if(self.queue[idx].getCost()>=element.getCost()):
+                if(self.queue[idx].getCost()>element.getCost()):
                     found=True
                 else:
                     idx+=1
@@ -183,6 +184,7 @@ if __name__ == "__main__":
         if(result[1]):
             grid.print()
             print('Total Iteration:',result[0])
+            print('Path length:',len(grid.matrix[endx][endy].predecessor)+1)
         else:
             print('No path found')
         print('Time execution using BFS:',end-start,'s')
@@ -194,6 +196,7 @@ if __name__ == "__main__":
         if(result[1]):
             grid.print()
             print('Total Iteration:',result[0])
+            print('Path length:',len(grid.matrix[endx][endy].predecessor)+1)
         else:
             print('No path found')
         print('Time execution using A*:',end-start,'s')
