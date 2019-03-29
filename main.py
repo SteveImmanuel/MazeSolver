@@ -3,7 +3,6 @@ import sys
 from colorama import Back, Style
 from time import time
 
-
 def valid(grid,curNode,nextX,nextY):
     return (nextX>=0 and nextX<grid.height) and (nextY>=0 and nextY<grid.width) and (not grid.matrix[nextX][nextY] in curNode.predecessor) and (grid.matrix[nextX][nextY].render!=1)
 
@@ -11,9 +10,6 @@ def visit(node1,node2,queue):
     node2.predecessor=node1.predecessor.copy()
     node2.predecessor.append(node1)
     queue.append(node2)
-
-def getCost(Node):
-    return Node.value+Node.manhattandist
 
 class Grid:
     def __init__(self,width,height):
@@ -64,20 +60,31 @@ class Node:
         return self.x==otherNode.x and self.y==otherNode.y
     def setVisited(self,bool):
         self.visited=bool
-    # def print(self):
-    #     print("     x="+str(self.x)+',y='+str(self.y))
+    def getCost(self):
+        return self.value+self.manhattandist
+    def print(self):
+        print("     x="+str(self.x)+',y='+str(self.y)+' cost='+str(self.getCost()))
 
 class PrioQueue:
     def __init__(self):
         self.queue=[]
     def append(self,element):
-        self.queue.append(element)
+        if(len(self.queue)==0):
+            self.queue.append(element)
+        else:
+            idx=0
+            found=False
+            while(idx<len(self.queue) and not found):
+                if(self.queue[idx].getCost()>=element.getCost()):
+                    found=True
+                else:
+                    idx+=1
+            if(found):
+                self.queue.insert(idx,element)
+            else:
+                self.queue.append(element)
     def pop(self):
-        min=0
-        for i in range(1,len(self.queue)):
-            if(self.queue[i].value+self.queue[i].manhattandist<self.queue[min].value+self.queue[min].manhattandist):
-                min=i
-        return self.queue.pop(min)
+        return self.queue.pop(0)
     # def removeUnwanted(self,curGoalNode):
     #     deleteIndex=[]
     #     for i in range(len(self.queue)-1,-1,-1):
@@ -94,9 +101,6 @@ def bfs(grid,startx,starty,endx,endy):
     while(len(queue)>0 and not found):
         count+=1
         curNode=queue.pop(0)
-        # print("curnode, x="+str(curNode.x)+', y='+str(curNode.y)+', render='+str(curNode.render))
-        # for i in range(len(curNode.predecessor)):
-        #     curNode.predecessor[i].print()
         if(curNode.isSameWith(grid.matrix[endx][endy])):
             grid.highLightPath(curNode)
             found=True
@@ -123,14 +127,8 @@ def astar(grid,startx,starty,endx,endy):
     count=0
     while(len(prioQueue.queue)>0 and not found):
         count+=1
-        # print("current prioqueue=")
-        # for i in range(len(prioQueue.queue)):
-        #     prioQueue.queue[i].print()
         curNode=prioQueue.pop()
-        # print('len pred=',len(curNode.predecessor))
-        # print(" curnode, x="+str(curNode.x)+', y='+str(curNode.y))
         if(curNode.isSameWith(grid.matrix[endx][endy])):
-            # curGoalNode=curNode
             grid.highLightPath(curNode)
             found=True
         else:
@@ -152,49 +150,49 @@ def astar(grid,startx,starty,endx,endy):
                 grid.matrix[curNode.x][curNode.y+1].setVisited(True)
     return [count,found]
 
-
 if __name__ == "__main__":
     if(len(sys.argv)!=2):
         print('Usage: python main.py <inputmaze>')
     else:
+        tempRow=[]
         try:
             with open('inputMaze/'+sys.argv[1],'r') as f:
-                tempRow=[]
                 for line in f:
                     tempRow.append(line.strip())
-            grid=Grid(len(tempRow[0]),len(tempRow))
-            for i in range(grid.height):
-                for j in range(grid.width):
-                    grid.matrix[i][j]=Node(i,j,int(tempRow[i][j]))
-            colorama.init()
-            startx=int(input('Input row coordinate of start: '))
-            starty=int(input('Input column coordinate of start: '))
-            endx=int(input('Input row coordinate of goal: '))
-            endy=int(input('Input column coordinate of goal: '))
-            print('Maze Input')
-            grid.print(grid.matrix[startx][starty],grid.matrix[endx][endy])
-            print('\nShortest Path using BFS Algorithm')
-            start=time()
-            result=bfs(grid,startx,starty,endx,endy)
-            end=time()
-            if(result[1]):
-                grid.print(grid.matrix[startx][starty],grid.matrix[endx][endy])
-            else:
-                print('No path found')
-            print('Total Iteration:',result[0])
-            print('Time execution using BFS:',end-start,'s')
-            grid.reset()
-            print('\nShortest Path using A* Algorithm')
-            start=time()
-            result=astar(grid,startx,starty,endx,endy)
-            end=time()
-            if(result[1]):
-                grid.print(grid.matrix[startx][starty],grid.matrix[endx][endy])
-            else:
-                print('No path found')
-            print('Total Iteration:',result[0])
-            print('Time execution using A*:',end-start,'s')
         except:
             print('File',sys.argv[1],'not found')
+            sys.exit(0)
+        grid=Grid(len(tempRow[0]),len(tempRow))
+        for i in range(grid.height):
+            for j in range(grid.width):
+                grid.matrix[i][j]=Node(i,j,int(tempRow[i][j]))
+        colorama.init()
+        startx=int(input('Input row coordinate of start: '))
+        starty=int(input('Input column coordinate of start: '))
+        endx=int(input('Input row coordinate of goal: '))
+        endy=int(input('Input column coordinate of goal: '))
+        print('Maze Input')
+        grid.print(grid.matrix[startx][starty],grid.matrix[endx][endy])
+        print('\nShortest Path using BFS Algorithm')
+        start=time()
+        result=bfs(grid,startx,starty,endx,endy)
+        end=time()
+        if(result[1]):
+            grid.print(grid.matrix[startx][starty],grid.matrix[endx][endy])
+        else:
+            print('No path found')
+        print('Total Iteration:',result[0])
+        print('Time execution using BFS:',end-start,'s')
+        grid.reset()
+        print('\nShortest Path using A* Algorithm')
+        start=time()
+        result=astar(grid,startx,starty,endx,endy)
+        end=time()
+        if(result[1]):
+            grid.print(grid.matrix[startx][starty],grid.matrix[endx][endy])
+        else:
+            print('No path found')
+        print('Total Iteration:',result[0])
+        print('Time execution using A*:',end-start,'s')
         
     
